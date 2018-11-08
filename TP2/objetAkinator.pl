@@ -26,8 +26,8 @@ ask(communiquer ,X):-
   read(Reponse),
   Reponse ='oui'.
 
-ask(cusine ,X):-
-  format('X se trouve dans la cuisine ?',[X]),
+ask(cuisine ,X):-
+  format('X est dans la cusine ?',[X]),
   read(Reponse),
   Reponse ='oui'.
 
@@ -93,6 +93,10 @@ ask(piece ,X):-
   read(Reponse),
   Reponse ='oui'.
 
+ask(ranger ,X):-
+  format('On peut ranger des choses dans X ?',[X]),
+  read(Reponse),
+  Reponse ='oui'.
 
 /* ---------------------------------------------------------- */
 /* ----------------Definition Niveau------------------------ */
@@ -129,18 +133,13 @@ energieSecondLevel(X):-
   energie(X).
 
 noEnergieSecondLevel(X):-
-  ask(remplir, X),
-  remplir(X),
+  ask(ranger, X),
+  ranger(X),
   noEnergie(X).
 
 noEnergieSecondLevel(X):-
   ask(plante, X),
   plante(X),
-  noEnergie(X).
-
-noEnergieSecondLevel(X):-
-  ask(meuble, X),
-  meuble(X),
   noEnergie(X).
 
 noEnergieSecondLevel(X):-
@@ -253,7 +252,7 @@ main('Fourchette').
 plante('Cactus').
 remplir('Four').
 remplir('Casserole').
-remplir('Sac à dos').
+ranger('Sac à dos').
 noRemplir('Cuisinière').
 noRemplir('Table').
 cafe('Cafetière').
