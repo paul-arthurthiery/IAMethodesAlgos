@@ -15,7 +15,7 @@ predicate oneMatchPerTeamPerDay(int: day) = alldifferent([calendar[day, team] | 
 predicate noRepetingMatches(int: team) = alldifferent([calendar[day, team] | day in days]);%every match must be different
 
 %global constraints for our matrix
-constraint forall(i in 1..N-1, j in 1..N)(calendar[i, j]>=1 /\ calendar[i, j]<=N /\calendar[i, j] != j /\ calendar[i,calendar[i, j]]= j);%all teams have numbers between 1 and N, teams cannot play against themselves, matches are symetrical
+constraint forall(i in 1..N-1, j in 1..N)(calendar[i, j]>=1 /\ calendar[i, j]<=N /\calendar[i, j] != j );%all teams have numbers between 1 and N, teams cannot play against themselves, matches are symetrical
 constraint forall(i in 1..N-1)(oneMatchPerTeamPerDay(i));
 constraint forall(i in 1..N)(noRepetingMatches(i));
 constraint forall(j in 1..N) (

@@ -1,4 +1,3 @@
-% Use this editor as a MiniZinc scratch book
 include "alldifferent.mzn";
 
 int: n = 5;%5 maisons 
@@ -58,4 +57,3 @@ constraint alldifferent([sculpteur, diplomate, medecin, violoniste, acrobate]);
 solve satisfy;
 
 output ["celui qui boit de l'eau = ", show(eau), "\n", "celui qui possède le zèbre = ", show(zebre),"\n"]
-%TODO meilleur affichage du résultat
