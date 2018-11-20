@@ -27,7 +27,6 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.early_stopping = early_stopping
         
 
-
     """
         Public methods, can be called by the user
         To create a custom estimator in sklearn, we need to define the following methods:
@@ -132,7 +131,6 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         Out:
         Predicted classes
     """
-
     
     def predict(self, X, y=None):
         try:
