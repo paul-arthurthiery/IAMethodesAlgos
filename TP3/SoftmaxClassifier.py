@@ -5,7 +5,7 @@ import numpy as np
 class SoftmaxClassifier(BaseEstimator, ClassifierMixin):  
     """A softmax classifier"""
 
-    def __init__(self, lr = 0.1, alpha = 100, n_epochs = 1000, eps = 1.0e-5,threshold = 1.0e-10 , regularization = True, early_stopping = True):
+    def __init__(self,omega = 1, lr = 0.1, alpha = 100, n_epochs = 1000, eps = 1.0e-5,threshold = 1.0e-10 , regularization = True, early_stopping = True):
        
         """
             self.lr : the learning rate for weights update during gradient descent
@@ -25,6 +25,7 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.regularization = regularization
         self.threshold = threshold
         self.early_stopping = early_stopping
+        self.omega = omega
         
 
     """
@@ -60,6 +61,7 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
     """
 
+
     def fit(self, X, y=None):
         
         prev_loss = np.inf
@@ -70,31 +72,32 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
         
 
-        # X_bias =         
-        # self.theta_  = 
+        #X_bias = np.ones(np.size(X),np.size(X[0])+1)
+        #X_bias[:,:-1] = X 
         
+        X_bias = np.c_[X , np.ones(len(X))]
+        
+        self.theta_ = np.random.rand(self.nb_feature, self.nb_classes)
+        self.theta_ = np.vstack([self.theta_ ,self.theta_[1]])
 
-        for epoch in range( self.n_epochs):
+        for epoch in range(self.n_epochs):
 
-            # logits = 
-            # probabilities = 
-            
-            
-            # loss =                
-            # self.theta_ = 
-            
-            # self.losses_.append(loss)
-
+            logits = np.dot(X_bias, self.theta_)
+            probabilities = self.predict_proba(X)
+            print(np.shape(probabilities))
+            loss = self._cost_function(probabilities, y)               
+            self.theta_ =  self.theta_ - self.omega*self._get_gradient(X,y,probabilities)    
+            self.losses_.append(loss)
+            if((losses[-2] -losses[-1]) <= self.threshold):
+                self.early_stopping = True
+            else:
+                self.early_stopping = False
             if self.early_stopping:
                 pass
+                    
+                    
 
-
-        return self
-
-    
-
-   
-    
+        return self    
 
     """
         In: 
@@ -114,8 +117,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             getattr(self, "theta_")
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
-        
-        pass
+        X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
+        X_bias[:,:-1] = X
+        z = np.dot(X_bias, self.theta_) #archtung les bias sur theta
+        result = self._softmax(z)
+        return result    
 
 
         """
@@ -137,7 +143,20 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             getattr(self, "theta_")
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
-        pass
+        X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
+        X_bias[:,:-1] = X
+        
+        proba = self.predict_proba(X)
+        #print(proba)
+        #print(np.shape(X_bias))
+        result = np.zeros((np.shape(X)[1],1))
+        for i in range(np.shape(X)[1]):
+            prob = proba[i,:]
+            maxProb = np.max(prob)
+            for j in range(self.nb_feature-1):
+                if(prob[j] == maxProb):
+                    result[i] = j
+        return result
 
     
 
@@ -161,8 +180,10 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """    
 
     def score(self, X, y=None):
-        pass
-    
+        probs = self.predict(self, X, y=None)
+        self.regularization = False
+        return self._cost_function(self,probs, y=None)
+        
 
     """
         Private methods, their names begin with an underscore
@@ -184,11 +205,24 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         Probabilities
     """
     
-    def _cost_function(self,probabilities, y ): 
-        pass
-    
-
-    
+    def _cost_function(self,probabilities, y ):
+        probabilities = np.clip(probabilities, self.eps, 1-self.eps)
+        y=self._one_hot(y)
+        result = 0
+        for i in range(np.shape(probabilities)[0]):
+            for j in range(self.nb_classes):
+                result += np.kron(i,j)*np.log10(probabilities[i][j])
+        result *= (-1/(np.size(probabilities)))
+        if(self.regularization == 1 ):
+            somme = 0
+            for i in range(self.nb_feature):
+                for k in range(self.nb_classes):
+                    somme += self.theta_[i][k]**2
+            result += somme*self.alpha
+        else:
+            return result
+                
+        
     """
         In :
         Target y: nb_examples * 1
@@ -206,10 +240,17 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
     
     
-    def _one_hot(self,y):
-        pass
-
-
+    def _one_hot(self, Y):
+        size = np.size(Y)
+        unique = np.unique(Y)
+        min = unique[0]
+        sizeUnique = np.size(unique)
+        
+        result = np.zeros((size,sizeUnique))
+        
+        for i in range(size):
+                result[i][Y[i] - min] = 1
+        return result
     """
         In :
         Logits: (self.nb_features +1) * self.nb_classes
@@ -222,9 +263,12 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """
     
     def _softmax(self,z):
-        pass
-    
-
+        result = np.zeros((self.nb_feature +1, self.nb_classes))
+        for k in range(np.size(result[0])):
+            zColumn = z[:][k]
+            result[k] = np.exp(zColumn) / sum(np.exp(z[:][:]))
+ 
+        return result
     """
         In:
         X with bias
@@ -240,9 +284,20 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         Gradient
 
     """
-
     def _get_gradient(self,X,y, probas):
-        
-        pass
-    
-    
+      X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
+      X_bias[:,:-1] = X
+      X_bias = X_bias.T
+      y=self._one_hot(y);
+      result = np.dot(X_bias,(probas - y))
+      result *= 1/(np.size(probas))
+      if(self.regularization == 1 ):
+          somme = 0
+          for i in range(self.nb_feature):
+              for k in range(self.nb_classes):
+                  somme += self.theta_[i][k]**2
+                  result += somme*self.alpha
+      else:
+          return result
+                
+
