@@ -84,16 +84,16 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
             logits = np.dot(X_bias, self.theta_)
             probabilities = self.predict_proba(X)
-            print(np.shape(probabilities))
             loss = self._cost_function(probabilities, y)               
-            self.theta_ =  self.theta_ - self.omega*self._get_gradient(X,y,probabilities)    
+            self.theta_ -= self.omega*self._get_gradient(X,y,probabilities)    
             self.losses_.append(loss)
-            if((losses[-2] -losses[-1]) <= self.threshold):
-                self.early_stopping = True
-            else:
-                self.early_stopping = False
-            if self.early_stopping:
-                pass
+            if(epoch > 0):
+                if((self.losses_[-2] -self.losses_[-1]) <= self.threshold):
+                    self.early_stopping = True
+                else:
+                    self.early_stopping = False
+                    if self.early_stopping:
+                        pass
                     
                     
 
@@ -147,13 +147,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         X_bias[:,:-1] = X
         
         proba = self.predict_proba(X)
-        #print(proba)
-        #print(np.shape(X_bias))
         result = np.zeros((np.shape(X)[1],1))
         for i in range(np.shape(X)[1]):
             prob = proba[i,:]
             maxProb = np.max(prob)
-            for j in range(self.nb_feature-1):
+            for j in range(self.nb_classes):
                 if(prob[j] == maxProb):
                     result[i] = j
         return result
@@ -213,7 +211,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             for j in range(self.nb_classes):
                 result += np.kron(i,j)*np.log10(probabilities[i][j])
         result *= (-1/(np.size(probabilities)))
-        if(self.regularization == 1 ):
+        if(self.regularization):
+            return result
             somme = 0
             for i in range(self.nb_feature):
                 for k in range(self.nb_classes):
@@ -263,11 +262,13 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """
     
     def _softmax(self,z):
-        result = np.zeros((self.nb_feature +1, self.nb_classes))
+        
+        result = np.zeros((np.shape(z)[0], self.nb_classes))
         for k in range(np.size(result[0])):
-            zColumn = z[:][k]
-            result[k] = np.exp(zColumn) / sum(np.exp(z[:][:]))
- 
+            zColumn = z[:,k]
+            expzk = np.exp(zColumn)
+            expz = sum(sum(np.exp(z)))
+            result[:,k] = expzk/expz
         return result
     """
         In:
@@ -291,10 +292,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
       y=self._one_hot(y);
       result = np.dot(X_bias,(probas - y))
       result *= 1/(np.size(probas))
-      if(self.regularization == 1 ):
+      if(self.regularization):
+          return result
           somme = 0
           for i in range(self.nb_feature):
-              for k in range(self.nb_classes):
+              for k in range(self.nb_classes - 1):
                   somme += self.theta_[i][k]**2
                   result += somme*self.alpha
       else:
