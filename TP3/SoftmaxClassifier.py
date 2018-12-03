@@ -119,8 +119,9 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             raise RuntimeError("You must train classifer before predicting data!")
         X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
         X_bias[:,:-1] = X
-        z = np.dot(X_bias, self.theta_) #archtung les bias sur theta
+        z = np.dot(X_bias, self.theta_)
         result = self._softmax(z)
+        #print(result)
         return result    
 
 
@@ -208,9 +209,10 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         y=self._one_hot(y)
         result = 0
         for i in range(np.shape(probabilities)[0]):
-            for j in range(self.nb_classes):
+            for j in range(np.shape(probabilities)[1]):
                 result += np.kron(i,j)*np.log10(probabilities[i][j])
-        result *= (-1/(np.size(probabilities)))
+        result *= (-1/(np.shape(probabilities)[0]))
+        #print(result)
         if(self.regularization):
             return result
             somme = 0
