@@ -31,4 +31,4 @@ cl = SoftmaxClassifier()
 
 # train on X_train and not on X_test to avoid overfitting
 train_p = cl.fit_predict(X_train,y_train)
-test_p = cl.predict(X_test)
+#test_p = cl.predict(X_test)

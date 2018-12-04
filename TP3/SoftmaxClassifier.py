@@ -81,11 +81,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.theta_ = np.vstack([self.theta_ ,self.theta_[1]])
 
         for epoch in range(self.n_epochs):
-
+            print(self.theta_)
             logits = np.dot(X_bias, self.theta_)
             probabilities = self.predict_proba(X)
             loss = self._cost_function(probabilities, y)               
-            self.theta_ -= self.omega*self._get_gradient(X,y,probabilities)    
+            self.theta_ -= self.omega*self._get_gradient(X_bias,y,probabilities)    
             self.losses_.append(loss)
             if(epoch > 0):
                 if((self.losses_[-2] -self.losses_[-1]) <= self.threshold):
@@ -119,9 +119,10 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             raise RuntimeError("You must train classifer before predicting data!")
         X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
         X_bias[:,:-1] = X
-        z = np.dot(X_bias, self.theta_)
-        result = self._softmax(z)
-        #print(result)
+        result = np.ones((np.shape(X)[0],self.nb_classes))
+        for i in range(np.shape(X)[0]):  
+            z = np.dot(X_bias[i,:], self.theta_)
+            result[i,:] = self._softmax(z)
         return result    
 
 
@@ -264,13 +265,10 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """
     
     def _softmax(self,z):
-        
-        result = np.zeros((np.shape(z)[0], self.nb_classes))
-        for k in range(np.size(result[0])):
-            zColumn = z[:,k]
-            expzk = np.exp(zColumn)
-            expz = sum(sum(np.exp(z)))
-            result[:,k] = expzk/expz
+        result = np.zeros((1, self.nb_classes))
+        expz = np.sum(np.exp(z))
+        for k in range(self.nb_classes):
+            result[:,k] = np.exp(z[k])/expz
         return result
     """
         In:
@@ -288,11 +286,9 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
 
     """
     def _get_gradient(self,X,y, probas):
-      X_bias = np.ones((np.shape(X)[0],np.shape(X)[1]+1))
-      X_bias[:,:-1] = X
-      X_bias = X_bias.T
+      X = X.T
       y=self._one_hot(y);
-      result = np.dot(X_bias,(probas - y))
+      result = np.dot(X,(probas - y))
       result *= 1/(np.size(probas))
       if(self.regularization):
           return result
