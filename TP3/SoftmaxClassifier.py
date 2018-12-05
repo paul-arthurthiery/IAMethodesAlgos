@@ -81,7 +81,6 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.theta_ = np.vstack([self.theta_ ,self.theta_[1]])
 
         for epoch in range(self.n_epochs):
-            print(self.theta_)
             logits = np.dot(X_bias, self.theta_)
             probabilities = self.predict_proba(X)
             loss = self._cost_function(probabilities, y)               
@@ -94,9 +93,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
                     self.early_stopping = False
                     if self.early_stopping:
                         pass
-                    
-                    
-
+                               
+        print("Done")
         return self    
 
     """
@@ -149,8 +147,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         X_bias[:,:-1] = X
         
         proba = self.predict_proba(X)
-        result = np.zeros((np.shape(X)[1],1))
-        for i in range(np.shape(X)[1]):
+        result = np.zeros((np.shape(X)[0],1))
+        for i in range(np.shape(X)[0]):
             prob = proba[i,:]
             maxProb = np.max(prob)
             for j in range(self.nb_classes):
@@ -180,9 +178,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     """    
 
     def score(self, X, y=None):
-        probs = self.predict(self, X, y=None)
+        probs = self.predict(X)
         self.regularization = False
-        return self._cost_function(self,probs, y=None)
+        result = self._cost_function(probs,y)
+        #print(result)
+        return result
         
 
     """
@@ -210,10 +210,11 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         y=self._one_hot(y)
         result = 0
         for i in range(np.shape(probabilities)[0]):
-            for j in range(np.shape(probabilities)[1]):
-                result += np.kron(i,j)*np.log10(probabilities[i][j])
+            classePredite = np.where(probabilities[i] == max(probabilities[i]))
+            classeCorrecte =  np.where(y[i] == 1)
+            if(classeCorrecte == classePredite):
+                result += np.log10(probabilities[i][classeCorrecte])
         result *= (-1/(np.shape(probabilities)[0]))
-        #print(result)
         if(self.regularization):
             return result
             somme = 0
